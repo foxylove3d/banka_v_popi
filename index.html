@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Bongo Can Clicker</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #FDFBF7;
+            font-family: sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #score {
+            font-size: 32px;
+            font-weight: bold;
+            color: #5A321E;
+            margin-bottom: 20px;
+        }
+        #game-canvas {
+            width: 250px;
+            height: 250px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="score">0</div>
+    <!-- Изображение персонажа -->
+    <img id="game-canvas" src="state1.png" alt="Clicker">
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачивает Mini App на весь экран
+
+        let clicks = 0;
+        const scoreEl = document.getElementById('score');
+        const imgEl = document.getElementById('game-canvas');
+
+        // Пути к вашим кадрам
+        const imgState1 = 'state1.png';
+        const imgState2 = 'state2.png';
+
+        // Функция нажатия (для ПК и тачскринов)
+        function pressDown(e) {
+            e.preventDefault();
+            clicks++;
+            scoreEl.innerText = clicks;
+            imgEl.src = imgState2; // Кадр: сжатая банка
+
+            // Легкая вибрация телефона при клике через Telegram API
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        function pressUp(e) {
+            e.preventDefault();
+            imgEl.src = imgState1; // Кадр: обычное состояние
+        }
+
+        imgEl.addEventListener('mousedown', pressDown);
+        imgEl.addEventListener('mouseup', pressUp);
+        imgEl.addEventListener('touchstart', pressDown);
+        imgEl.addEventListener('touchend', pressUp);
+    </script>
+</body>
+</html>
