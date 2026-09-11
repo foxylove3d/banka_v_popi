@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bongo Can Clicker</title>
     <style>
-        /* Подключаем ваш кастомный шрифт */
         @font-face {
             font-family: 'Johann';
             src: url('Johann-Light.otf') format('opentype');
@@ -38,116 +37,134 @@
             width: 100%;
             max-width: 480px;
             height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px 10px;
+            overflow: hidden;
         }
 
-        /* Верхняя панель: счетчик (icon_clicks.png как фон) и сундук */
-        .top-bar {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .score-box {
-            position: relative;
-            background-image: url('icon_clicks.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            padding: 15px 40px;
-            font-size: 26px;
-            font-weight: bold;
-            color: #1a1a1a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 160px;
-            min-height: 60px;
-        }
-
-        .chest-icon {
-            width: 55px;
-            height: 55px;
-            object-fit: contain;
-            cursor: pointer;
-            display: none;
-            animation: bounce 1s infinite alternate;
-        }
-
-        @keyframes bounce {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-5px); }
-        }
-
-        /* Центральная зона с банкой и ногами-стейтами */
-        .click-area {
-            position: relative;
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-        }
-
-        .can-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.05s ease;
-        }
-
-        .can-wrapper:active {
-            transform: scale(0.96);
-        }
-
-        /* Банка строго за сундуком/по центру, уменьшенная */
+        /* Слои банки и персонажа (накладываются пиксель в пиксель) */
         .can-img {
-            max-height: 220px;
-            width: auto;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
+            z-index: 2;
+        }
+
+        .face-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            z-index: 3;
         }
 
         .state-img {
             position: absolute;
-            max-height: 220px;
-            width: auto;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             display: none;
-            pointer-events: none;
+            z-index: 5; /* Поверх банки и лица во время анимации */
         }
 
         .state-img.active {
             display: block;
         }
 
+        /* Невидимая кликабельная зона по центру */
+        .click-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .click-area:active ~ .can-img {
+            transform: scale(0.98);
+            transition: transform 0.05s ease;
+        }
+
+        /* Верхняя панель со счетчиком */
+        .score-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .score-box {
+            position: absolute;
+            top: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 55px;
+            background-image: url('icon_clicks.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a1a1a;
+            pointer-events: auto;
+            padding-top: 2px;
+        }
+
+        /* Сундук в правом верхнем углу */
+        .chest-icon {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            width: 65px;
+            height: 65px;
+            object-fit: contain;
+            cursor: pointer;
+            display: none;
+            z-index: 25;
+            pointer-events: auto;
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-6px); }
+        }
+
         /* Нижнее меню */
         .footer-menu {
-            display: flex;
-            gap: 10px;
+            position: absolute;
+            bottom: 25px;
+            left: 0;
             width: 100%;
+            display: flex;
             justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
+            gap: 12px;
+            z-index: 30;
+            pointer-events: none;
         }
 
         .menu-btn {
             background: transparent;
             border: none;
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 55px;
+            height: 55px;
             cursor: pointer;
             padding: 0;
+            pointer-events: auto;
         }
 
         .menu-btn img {
@@ -156,7 +173,7 @@
             object-fit: contain;
         }
 
-        /* Модальное окно библиотеки */
+        /* Модальное окно библиотеки скинов */
         .modal {
             position: fixed;
             top: 0;
@@ -204,8 +221,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            aspect-ratio: 1 / 1;
-            flex-shrink: 0;
         }
 
         .close-btn img {
@@ -214,7 +229,6 @@
             object-fit: contain;
         }
 
-        /* Сетка скинов: максимум 3 колонки, максимум 4 ряда, скролл */
         .skins-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -234,6 +248,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .skin-cell img {
@@ -246,22 +261,22 @@
 <body>
 
     <div class="game-container">
-        <!-- Верхняя панель: Счётчик (icon_clicks.png) и сундук (icon_chest.png) -->
-        <div class="top-bar">
+        <!-- Слои персонажа (используем точные файлы из вашего репозитория) -->
+        <img src="state1_legs.png" alt="State 1" class="state-img" id="state1">
+        <img src="state2_legs.png" alt="State 2" class="state-img" id="state2">
+        <img src="emotion_default_trall.png" alt="Face" class="face-img">
+        <img src="банка.png" alt="Can" class="can-img" id="main-can">
+
+        <!-- Кликабельная зона -->
+        <div class="click-area" id="click-target"></div>
+
+        <!-- Верхняя панель -->
+        <div class="score-container">
             <div class="score-box" id="score">70</div>
             <img src="icon_chest.png" alt="Chest" class="chest-icon" id="chest">
         </div>
 
-        <!-- Центральная интерактивная зона (банка и ноги-стейты) -->
-        <div class="click-area" id="click-target">
-            <div class="can-wrapper">
-                <img src="банка.png" alt="Can" class="can-img" id="main-can">
-                <img src="state1_legs.png" alt="State 1" class="state-img" id="state1">
-                <img src="state2_legs.png" alt="State 2" class="state-img" id="state2">
-            </div>
-        </div>
-
-        <!-- Нижнее меню с вашими точными иконками -->
+        <!-- Нижнее меню управления -->
         <div class="footer-menu">
             <button class="menu-btn" id="color-btn" title="Цвет фона">
                 <img src="icon_color_background.png" alt="Color">
@@ -278,7 +293,7 @@
         </div>
     </div>
 
-    <!-- Окно библиотеки -->
+    <!-- Окно библиотеки скинов (заполняется из ваших файлов репозитория) -->
     <div class="modal" id="lib-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -297,6 +312,7 @@
         const clickTarget = document.getElementById('click-target');
         const state1 = document.getElementById('state1');
         const state2 = document.getElementById('state2');
+        const mainCan = document.getElementById('main-can');
         
         const openLibBtn = document.getElementById('open-lib');
         const closeLibBtn = document.getElementById('close-lib');
@@ -304,7 +320,7 @@
         const skinsGrid = document.getElementById('skins-grid');
         const chest = document.getElementById('chest');
 
-        // Список разблокированных скинов из ваших файлов для примера сетки
+        // Список всех доступных скинов из вашего репозитория
         let unlockedSkins = [
             'skin_default_borsh.png', 
             'skin_default_cucumber.png', 
@@ -330,7 +346,6 @@
             e.stopPropagation();
             score += 50;
             scoreElement.textContent = score;
-            
             localStorage.setItem('last_chest_time', Date.now().toString());
             chest.style.display = 'none';
         });
@@ -346,6 +361,13 @@
                 const img = document.createElement('img');
                 img.src = skin;
                 cell.appendChild(img);
+
+                // При клике на скин в библиотеке меняем банку
+                cell.addEventListener('click', () => {
+                    mainCan.src = skin;
+                    libModal.classList.remove('open');
+                });
+
                 skinsGrid.appendChild(cell);
             });
         }
