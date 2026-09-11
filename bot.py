@@ -1,13 +1,25 @@
-import asyncio
+import os
+import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, FSInputFile
+from aiohttp import web
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
-# Твой токен от @BotFather
+# Обновленный токен твоего бота
 BOT_TOKEN = "8891218010:AAEGuU9-6zT6fAWSKvJBHsWPzVDEQOSA2IE"
 
-# Ссылка на твой GitHub Pages
+# Ссылка на твой GitHub Pages с игрой
 WEB_APP_URL = "https://foxylove3d.github.io/banka_v_popi/"
+
+# Ссылка на твой веб-сервис на Render
+RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "https://banka-v-popi.onrender.com")
+
+WEBHOOK_PATH = f"/bot/{BOT_TOKEN}"
+WEBHOOK_URL = f"{RENDER_EXTERNAL_URL}{WEBHOOK_PATH}"
+
+# Порт, который выделяет Render
+PORT = int(os.getenv("PORT", 8080))
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -31,9 +43,30 @@ async def cmd_start(message: types.Message):
         reply_markup=kb
     )
 
-async def main():
-    print("Бот запущен и готов к работе!")
-    await dp.start_polling(bot)
+async def on_startup(bot: Bot):
+    # Автоматически регистрируем вебхук в Телеграме при старте сервера
+    await bot.set_webhook(WEBHOOK_URL)
+    print(f"Вебхук успешно установлен на: {WEBHOOK_URL}")
+
+def main():
+    logging.basicConfig(level=logging.INFO)
+    
+    # Создаем aiohttp приложение
+    app = web.Application()
+    
+    # Регистрируем обработчик вебхуков aiogram
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+    )
+    webhook_requests_handler.register(app, path=WEBHOOK_PATH)
+    
+    setup_application(app, dp, bot=bot)
+    dp.startup.register(on_startup)
+    
+    print(f"Запуск веб-сервера на порту {PORT}...")
+    # Запускаем веб-сервер, который ждет входящие запросы от Render и Telegram
+    web.run_app(app, host="0.0.0.0", port=PORT)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
