@@ -4,7 +4,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, FSInputFile
 
 # Твой токен от @BotFather
-BOT_TOKEN = "8891218010:AAEsjcIe3fRb1tlX6EHHkipDV5U6UdZavMI"
+BOT_TOKEN = "8891218010:AAEGuU9-6zT6fAWSKvJBHsWPzVDEQOSA2IE"
 
 # Ссылка на твой GitHub Pages
 WEB_APP_URL = "https://foxylove3d.github.io/banka_v_popi/"
