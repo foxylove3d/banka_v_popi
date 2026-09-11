@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bongo Can Clicker</title>
     <style>
+        /* Подключаем ваш кастомный шрифт */
+        @font-face {
+            font-family: 'Johann';
+            src: url('Johann-Light.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
         * {
             box-sizing: border-box;
             user-select: none;
@@ -16,7 +24,7 @@
             padding: 0;
             background-color: #7b2cbf;
             color: #ffffff;
-            font-family: sans-serif;
+            font-family: 'Johann', sans-serif;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -37,7 +45,7 @@
             padding: 20px 10px;
         }
 
-        /* Верхняя панель: счетчик и сундук рядом */
+        /* Верхняя панель: счетчик (icon_clicks.png как фон) и сундук */
         .top-bar {
             display: flex;
             align-items: center;
@@ -48,19 +56,25 @@
         }
 
         .score-box {
-            background: #e2d1f9;
-            color: #1a1a1a;
-            padding: 10px 30px;
-            border-radius: 30px;
-            font-size: 24px;
+            position: relative;
+            background-image: url('icon_clicks.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            padding: 15px 40px;
+            font-size: 26px;
             font-weight: bold;
-            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.1);
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 160px;
+            min-height: 60px;
         }
 
-        /* Сундук рядом со счетчиком */
         .chest-icon {
-            width: 50px;
-            height: 50px;
+            width: 55px;
+            height: 55px;
             object-fit: contain;
             cursor: pointer;
             display: none;
@@ -72,7 +86,7 @@
             100% { transform: translateY(-5px); }
         }
 
-        /* Центральная зона с уменьшенной банкой */
+        /* Центральная зона с банкой и ногами-стейтами */
         .click-area {
             position: relative;
             flex-grow: 1;
@@ -95,6 +109,7 @@
             transform: scale(0.96);
         }
 
+        /* Банка строго за сундуком/по центру, уменьшенная */
         .can-img {
             max-height: 220px;
             width: auto;
@@ -124,28 +139,22 @@
         }
 
         .menu-btn {
-            background: #a3c4f3;
+            background: transparent;
             border: none;
             width: 60px;
             height: 60px;
-            border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.1);
+            padding: 0;
         }
 
         .menu-btn img {
-            width: 32px;
-            height: 32px;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
         }
-
-        .color-btn { background: #ffb5a7; }
-        .backpack-btn { background: #b5e48c; }
-        .style-btn { background: #ffc8dd; }
-        .home-btn { background: #fde2e4; }
 
         /* Модальное окно библиотеки */
         .modal {
@@ -186,13 +195,11 @@
         }
 
         .close-btn {
-            background: #444;
+            background: transparent;
             border: none;
-            color: #fff;
+            padding: 0;
             width: 32px;
             height: 32px;
-            border-radius: 50%;
-            font-size: 18px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -201,6 +208,13 @@
             flex-shrink: 0;
         }
 
+        .close-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Сетка скинов: максимум 3 колонки, максимум 4 ряда, скролл */
         .skins-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -211,19 +225,20 @@
         }
 
         .skin-cell {
-            background: #3a3a3a;
+            background-image: url('skin_slot.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
             aspect-ratio: 1 / 1;
-            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            border: 2px solid transparent;
         }
 
         .skin-cell img {
-            width: 80%;
-            height: 80%;
+            width: 70%;
+            height: 70%;
             object-fit: contain;
         }
     </style>
@@ -231,34 +246,34 @@
 <body>
 
     <div class="game-container">
-        <!-- Верхняя панель: Счётчик и сундук рядом -->
+        <!-- Верхняя панель: Счётчик (icon_clicks.png) и сундук (icon_chest.png) -->
         <div class="top-bar">
             <div class="score-box" id="score">70</div>
-            <img src="chest.png" alt="Chest" class="chest-icon" id="chest">
+            <img src="icon_chest.png" alt="Chest" class="chest-icon" id="chest">
         </div>
 
-        <!-- Центральная интерактивная зона (уменьшенная банка) -->
+        <!-- Центральная интерактивная зона (банка и ноги-стейты) -->
         <div class="click-area" id="click-target">
             <div class="can-wrapper">
-                <img src="can.png" alt="Can" class="can-img" id="main-can">
-                <img src="state1.png" alt="State 1" class="state-img" id="state1">
-                <img src="state2.png" alt="State 2" class="state-img" id="state2">
+                <img src="банка.png" alt="Can" class="can-img" id="main-can">
+                <img src="state1_legs.png" alt="State 1" class="state-img" id="state1">
+                <img src="state2_legs.png" alt="State 2" class="state-img" id="state2">
             </div>
         </div>
 
-        <!-- Нижнее меню -->
+        <!-- Нижнее меню с вашими точными иконками -->
         <div class="footer-menu">
-            <button class="menu-btn color-btn" id="color-btn" title="Цвет фона">
-                <img src="icon_color_background.png" alt="Color" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\'><circle cx=\'12\' cy=\'12\' r=\'10\'/></svg>'">
+            <button class="menu-btn" id="color-btn" title="Цвет фона">
+                <img src="icon_color_background.png" alt="Color">
             </button>
-            <button class="menu-btn backpack-btn" id="open-lib">
-                <img src="backpack.png" alt="Library">
+            <button class="menu-btn" id="open-lib" title="Библиотека">
+                <img src="icon_clothes.png" alt="Library">
             </button>
-            <button class="menu-btn style-btn">
-                <img src="glasses.png" alt="Style">
+            <button class="menu-btn" title="Стиль">
+                <img src="icon_emotions.png" alt="Style">
             </button>
-            <button class="menu-btn home-btn">
-                <img src="home.png" alt="Home">
+            <button class="menu-btn" title="Главная">
+                <img src="icon_home.png" alt="Home">
             </button>
         </div>
     </div>
@@ -268,7 +283,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Коллекция</h3>
-                <button class="close-btn" id="close-lib">×</button>
+                <button class="close-btn" id="close-lib">
+                    <img src="icon_button_close.png" alt="Close">
+                </button>
             </div>
             <div class="skins-grid" id="skins-grid"></div>
         </div>
@@ -287,7 +304,14 @@
         const skinsGrid = document.getElementById('skins-grid');
         const chest = document.getElementById('chest');
 
-        let unlockedSkins = ['can.png', 'state1.png', 'state2.png']; 
+        // Список разблокированных скинов из ваших файлов для примера сетки
+        let unlockedSkins = [
+            'skin_default_borsh.png', 
+            'skin_default_cucumber.png', 
+            'skin_default_fish.png', 
+            'skin_default_pony.png', 
+            'skin_rare_crotovuha.png'
+        ]; 
 
         const CHEST_COOLDOWN = 30 * 60 * 1000; // 30 минут
 
