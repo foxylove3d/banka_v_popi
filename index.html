@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Bongo Can Clicker</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        @font-face {
+            font-family: 'Johann';
+            src: url('Johann-Light.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100vh;
+            background-color: rgb(195, 177, 243);
+            font-family: sans-serif;
+            overflow: hidden;
+        }
+
+        /* Верхняя плашка очков */
+        .header {
+            margin-top: 25px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .header img {
+            width: 180px;
+        }
+
+        #score {
+            position: absolute;
+            font-family: 'Johann', sans-serif;
+            font-size: 26px;
+            color: #0b132b; 
+            font-weight: bold;
+        }
+
+        /* Игровая область */
+        .game-area {
+            position: relative;
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Слои персонажа */
+        .layer {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        #jar-skin { z-index: 1; width: 180px; }
+        #jar-face { z-index: 2; width: 140px; margin-top: -10px; }
+        #jar-legs { z-index: 3; width: 320px; }
+
+        /* Сундук */
+        #chest {
+            position: absolute;
+            bottom: 15%;
+            z-index: 4;
+            width: 90px;
+            cursor: pointer;
+            display: none;
+            transition: transform 0.05s ease;
+        }
+
+        #chest:active {
+            transform: scale(0.9);
+        }
+
+        /* Нижнее меню */
+        .bottom-nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            z-index: 10;
+        }
+
+        .nav-item {
+            position: relative;
+            display: inline-block;
+        }
+
+        .nav-icon {
+            width: 65px;
+            height: 65px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .nav-icon:active {
+            transform: scale(0.92);
+        }
+
+        /* Уведомление о новом скине (!) */
+        .nav-badge {
+            display: none;
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background-color: #ff3b30;
+            color: white;
+            font-family: sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 22px;
+            z-index: 12;
+            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Модальное окно библиотеки */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-image: url('background_icons.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            width: 330px;
+            height: 390px;
+            position: relative;
+            padding: 45px 20px 20px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            z-index: 101;
+        }
+
+        /* Сетка скинов */
+        .skins-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding-bottom: 10px;
+        }
+
+        .skins-grid::-webkit-scrollbar { display: none; }
+
+        .skin-slot {
+            position: relative;
+            background-image: url('skin_slot.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .skin-slot:active { transform: scale(0.94); }
+
+        .skin-slot img {
+            width: 75%;
+            height: 75%;
+            object-fit: contain;
+        }
+
+        .skin-locked img {
+            filter: brightness(25%) grayscale(100%);
+            opacity: 0.6;
+        }
+
+        .skin-locked { cursor: not-allowed; }
+        .skin-locked:active { transform: none; }
+
+        .skin-count {
+            position: absolute;
+            bottom: 3px;
+            right: 4px;
+            background-color: #ff5277;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 1px 5px;
+            border-radius: 9px;
+            pointer-events: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        #color-picker-input { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <img src="icon_clicks.png" alt="Clicks bar">
+        <div id="score">0</div>
+    </div>
+
+    <div class="game-area" id="click-zone">
+        <img id="jar-skin" class="layer" src="skin_default_fish.png" alt="Jar Skin">
+        <img id="jar-face" class="layer" src="emotion_default_surprise.png" alt="Face Skin">
+        <img id="jar-legs" class="layer" src="state1_legs.png" alt="Legs">
+        <img id="chest" src="icon_chest.png" alt="Chest">
+    </div>
+
+    <!-- Обновленное меню с контейнерами для бейджиков -->
+    <div class="bottom-nav">
+        <div class="nav-item">
+            <img src="icon_color_background_round.png" class="nav-icon" id="btn-color" alt="Color">
+        </div>
+        <div class="nav-item">
+            <img src="icon_clothes.png" class="nav-icon" id="btn-jar-skins" alt="Jar Skins">
+            <div id="badge-jar" class="nav-badge">!</div>
+        </div>
+        <div class="nav-item">
+            <img src="icon_emotions.png" class="nav-icon" id="btn-faces" alt="Emotions">
+            <div id="badge-face" class="nav-badge">!</div>
+        </div>
+        <div class="nav-item">
+            <img src="icon_home.png" class="nav-icon" id="btn-home" alt="Home">
+        </div>
+    </div>
+
+    <div id="skin-modal" class="modal">
+        <div class="modal-content">
+            <img src="icon_button_close.png" class="close-btn" id="btn-close-modal" alt="Close">
+            <div id="skins-grid" class="skins-grid"></div>
+        </div>
+    </div>
+
+    <input type="color" id="color-picker-input" value="#c3b1f3">
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const jarSkins = [
+            'skin_default_borsh.png', 'skin_default_cucumber.png', 'skin_default_fish.png',
+            'skin_default_pony.png', 'skin_rare_crotovua.png', 'банка.png'
+        ];
+
+        const faceSkins = [
+            'emotion_default_angry.png', 'emotion_default_angry_cat.png', 'emotion_default_cry.png',
+            'emotion_default_cute.png', 'emotion_default_dog.png', 'emotion_default_pived.png',
+            'emotion_default_sad.png', 'emotion_default_sad_cat.png', 'emotion_default_sleep.png',
+            'emotion_default_soldful.png', 'emotion_default_surprise.png', 'emotion_default_surprise_happy.png',
+            'emotion_default_trall.png', 'emotion_rare_dog_happy.png', 'emotion_rare_pikmi.png',
+            'emotion_rare_question.png'
+        ];
+
+        const rarePool = [...jarSkins, ...faceSkins].filter(s => s.includes('rare'));
+        const defaultPool = [...jarSkins, ...faceSkins].filter(s => !s.includes('rare'));
+
+        let clicks = parseInt(localStorage.getItem('savedClicks')) || 0;
+        let bgColor = localStorage.getItem('savedBgColor') || 'rgb(195, 177, 243)';
+        let inventory = JSON.parse(localStorage.getItem('playerInventory')) || {};
+        let lastChestTime = parseInt(localStorage.getItem('lastChestTime')) || 0;
+        let chestTaps = 0;
+
+        // Переменные для уведомлений (!)
+        let hasNewJar = localStorage.getItem('hasNewJar') === 'true';
+        let hasNewFace = localStorage.getItem('hasNewFace') === 'true';
+
+        // Выдача начальных скинов при первом входе
+        if (Object.keys(inventory).length === 0) {
+            inventory['skin_default_fish.png'] = 1; 
+            inventory['emotion_default_surprise.png'] = 1; 
+            localStorage.setItem('playerInventory', JSON.stringify(inventory));
+            localStorage.setItem('selectedJarSkin', 'skin_default_fish.png');
+            localStorage.setItem('selectedFaceSkin', 'emotion_default_surprise.png');
+        }
+
+        const scoreEl = document.getElementById('score');
+        const legsEl = document.getElementById('jar-legs');
+        const jarEl = document.getElementById('jar-skin');
+        const faceEl = document.getElementById('jar-face');
+        const chestEl = document.getElementById('chest');
+        const colorPicker = document.getElementById('color-picker-input');
+        const badgeJar = document.getElementById('badge-jar');
+        const badgeFace = document.getElementById('badge-face');
+
+        scoreEl.innerText = clicks;
+        document.body.style.backgroundColor = bgColor;
+
+        const savedJar = localStorage.getItem('selectedJarSkin');
+        const savedFace = localStorage.getItem('selectedFaceSkin');
+        if (savedJar) jarEl.src = savedJar;
+        if (savedFace) faceEl.src = savedFace;
+
+        // Обновление отображения бейджиков
+        function updateBadges() {
+            badgeJar.style.display = hasNewJar ? 'block' : 'none';
+            badgeFace.style.display = hasNewFace ? 'block' : 'none';
+        }
+        updateBadges();
+
+        const clickZone = document.getElementById('click-zone');
+
+        function tapDown(e) {
+            if (e.target.id === 'chest') return;
+            e.preventDefault();
+
+            clicks++;
+            scoreEl.innerText = clicks;
+            localStorage.setItem('savedClicks', clicks);
+            legsEl.src = 'state2_legs.png';
+
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function tapUp(e) {
+            if (e.target.id === 'chest') return;
+            e.preventDefault();
+            legsEl.src = 'state1_legs.png';
+        }
+
+        clickZone.addEventListener('mousedown', tapDown);
+        clickZone.addEventListener('mouseup', tapUp);
+        clickZone.addEventListener('touchstart', tapDown);
+        clickZone.addEventListener('touchend', tapUp);
+
+        function checkChest() {
+            const now = Date.now();
+            if (now - lastChestTime >= 30 * 60 * 1000) {
+                chestEl.style.display = 'block';
+            } else {
+                chestEl.style.display = 'none';
+            }
+        }
+
+        chestEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            chestTaps++;
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+
+            if (chestTaps >= 1000) openChest();
+        });
+
+        function openChest() {
+            const isRare = Math.random() < 0.05;
+            const pool = isRare ? rarePool : defaultPool;
+            const droppedSkin = pool[Math.floor(Math.random() * pool.length)];
+
+            inventory[droppedSkin] = (inventory[droppedSkin] || 0) + 1;
+            localStorage.setItem('playerInventory', JSON.stringify(inventory));
+
+            // Зажигаем уведомление в зависимости от типа скина
+            if (jarSkins.includes(droppedSkin)) {
+                hasNewJar = true;
+                localStorage.setItem('hasNewJar', 'true');
+            } else {
+                hasNewFace = true;
+                localStorage.setItem('hasNewFace', 'true');
+            }
+            updateBadges();
+
+            alert((isRare ? "🌟 РЕДКИЙ СКИН!\nВам выпал: " : "🎉 Выпал скин:\n") + droppedSkin);
+
+            chestEl.style.display = 'none';
+            chestTaps = 0;
+            lastChestTime = Date.now();
+            localStorage.setItem('lastChestTime', lastChestTime);
+        }
+
+        setInterval(checkChest, 2000);
+        checkChest();
+
+        function renderGrid(skinList, type) {
+            const gridContainer = document.getElementById('skins-grid');
+            gridContainer.innerHTML = '';
+            const totalSlots = Math.max(16, skinList.length);
+
+            for (let i = 0; i < totalSlots; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'skin-slot';
+
+                if (skinList[i]) {
+                    const skinName = skinList[i];
+                    const count = inventory[skinName] || 0;
+                    const img = document.createElement('img');
+                    img.src = skinName;
+                    slot.appendChild(img);
+
+                    if (count > 0) {
+                        if (count > 1) {
+                            const badge = document.createElement('div');
+                            badge.className = 'skin-count';
+                            badge.innerText = count;
+                            slot.appendChild(badge);
+                        }
+                        slot.onclick = () => {
+                            if (type === 'jar') {
+                                jarEl.src = skinName;
+                                localStorage.setItem('selectedJarSkin', skinName);
+                            } else if (type === 'face') {
+                                faceEl.src = skinName;
+                                localStorage.setItem('selectedFaceSkin', skinName);
+                            }
+                            closeModal('skin-modal');
+                        };
+                    } else {
+                        slot.classList.add('skin-locked');
+                        slot.onclick = () => alert("Этот скин ещё не открыт! Выбейте его из сундука.");
+                    }
+                }
+                gridContainer.appendChild(slot);
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        document.getElementById('btn-close-modal').onclick = () => closeModal('skin-modal');
+        document.getElementById('btn-home').onclick = () => closeModal('skin-modal');
+
+        document.getElementById('btn-jar-skins').onclick = () => {
+            hasNewJar = false;
+            localStorage.setItem('hasNewJar', 'false');
+            updateBadges();
+            renderGrid(jarSkins, 'jar');
+            document.getElementById('skin-modal').style.display = 'flex';
+        };
+
+        document.getElementById('btn-faces').onclick = () => {
+            hasNewFace = false;
+            localStorage.setItem('hasNewFace', 'false');
+            updateBadges();
+            renderGrid(faceSkins, 'face');
+            document.getElementById('skin-modal').style.display = 'flex';
+        };
+
+        const btnColor = document.getElementById('btn-color');
+        btnColor.onclick = () => colorPicker.click();
+        colorPicker.oninput = (e) => {
+            const selectedColor = e.target.value;
+            document.body.style.backgroundColor = selectedColor;
+            localStorage.setItem('savedBgColor', selectedColor);
+        };
+    </script>
+</body>
+</html>
