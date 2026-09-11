@@ -2,17 +2,9 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bongo Can Clicker</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        @font-face {
-            font-family: 'Johann';
-            src: url('Johann-Light.otf') format('opentype');
-            font-weight: normal;
-            font-style: normal;
-        }
-
         * {
             box-sizing: border-box;
             user-select: none;
@@ -22,462 +14,306 @@
         body {
             margin: 0;
             padding: 0;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            height: 100vh;
-            background-color: rgb(195, 177, 243);
-            font-family: sans-serif;
-            overflow: hidden;
+            padding: 20px;
         }
 
-        /* Верхняя плашка очков */
+        /* Верхняя панель */
         .header {
-            margin-top: 25px;
-            position: relative;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-        }
-
-        .header img {
-            width: 180px;
-        }
-
-        #score {
-            position: absolute;
-            font-family: 'Johann', sans-serif;
-            font-size: 26px;
-            color: #0b132b; 
-            font-weight: bold;
-        }
-
-        /* Игровая область */
-        .game-area {
-            position: relative;
+            justify-content: space-between;
             width: 100%;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+        }
+
+        /* Основная зона клика (банка и стейты) */
+        .click-area {
+            position: relative;
             flex-grow: 1;
             display: flex;
-            align-items: center;
+            align-items: flex-end; /* Выравнивание по нижнему краю */
             justify-content: center;
+            width: 100%;
+            margin: 20px 0;
         }
 
-        /* Слои персонажа */
-        .layer {
-            position: absolute;
-            pointer-events: none;
-        }
-
-        #jar-skin { z-index: 1; width: 180px; }
-        #jar-face { z-index: 2; width: 140px; margin-top: -10px; }
-        #jar-legs { z-index: 3; width: 320px; }
-
-        /* Сундук */
-        #chest {
-            position: absolute;
-            bottom: 15%;
-            z-index: 4;
-            width: 90px;
+        /* Банка и состояния выровнены по низу */
+        .can-wrapper {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
             cursor: pointer;
-            display: none;
             transition: transform 0.05s ease;
         }
 
-        #chest:active {
-            transform: scale(0.9);
+        .can-wrapper:active {
+            transform: scale(0.96);
         }
 
-        /* Нижнее меню */
-        .bottom-nav {
+        .can-img {
+            max-height: 350px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        /* Стейты и банка поверх друг друга по нижнему краю */
+        .state-img {
+            position: absolute;
+            bottom: 0;
+            max-height: 350px;
+            width: auto;
+            display: none;
+            pointer-events: none;
+        }
+
+        .state-img.active {
+            display: block;
+        }
+
+        /* Иконки эмоций у нижнего края банки (снизу) */
+        .emotions-bar {
+            position: absolute;
+            bottom: 10px;
             display: flex;
-            gap: 12px;
-            margin-bottom: 25px;
+            gap: 10px;
             z-index: 10;
         }
 
-        .nav-item {
-            position: relative;
-            display: inline-block;
-        }
-
-        .nav-icon {
-            width: 65px;
-            height: 65px;
-            cursor: pointer;
-            transition: transform 0.1s ease;
-        }
-
-        .nav-icon:active {
-            transform: scale(0.92);
-        }
-
-        /* Уведомление о новом скине (!) */
-        .nav-badge {
-            display: none;
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            background-color: #ff3b30;
-            color: white;
-            font-family: sans-serif;
-            font-size: 16px;
-            font-weight: bold;
-            width: 22px;
-            height: 22px;
+        .emotion-icon {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            background: rgba(0, 0, 0, 0.5);
             border-radius: 50%;
-            text-align: center;
-            line-height: 22px;
-            z-index: 12;
-            pointer-events: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            padding: 5px;
+        }
+
+        /* Нижняя панель управления */
+        .footer-menu {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .menu-btn {
+            background: #ffcc00;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            color: #000;
         }
 
         /* Модальное окно библиотеки */
         .modal {
-            display: none;
             position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 100;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
             justify-content: center;
             align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal.open {
+            display: flex;
         }
 
         .modal-content {
-            background-image: url('background_icons.png');
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-            width: 330px;
-            height: 390px;
-            position: relative;
-            padding: 45px 20px 20px 20px;
+            background: #2a2a2a;
+            width: 100%;
+            max-width: 400px;
+            max-height: 80vh;
+            border-radius: 20px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
         }
 
         .close-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 36px;
-            height: 36px;
+            background: #444;
+            border: none;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 18px;
             cursor: pointer;
-            z-index: 101;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1 / 1; /* Сохраняет пропорции крестика строго квадратными */
+            flex-shrink: 0;
         }
 
-        /* Сетка скинов */
+        /* Сетка скинов: ровно 3 колонки максимум, прокрутка вниз */
         .skins-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            width: 100%;
-            height: 100%;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            padding-bottom: 10px;
+            max-height: calc(4 * 90px + 3 * 10px); /* Ограничение в 4 строки видимости */
+            padding-right: 5px;
         }
 
-        .skins-grid::-webkit-scrollbar { display: none; }
-
-        .skin-slot {
-            position: relative;
-            background-image: url('skin_slot.png');
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-            background-position: center;
-            width: 100%;
+        .skin-cell {
+            background: #3a3a3a;
             aspect-ratio: 1 / 1;
+            border-radius: 12px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            cursor: pointer;
+            justify-content: center;
+            overflow: hidden;
+            border: 2px solid transparent;
         }
 
-        .skin-slot:active { transform: scale(0.94); }
-
-        .skin-slot img {
-            width: 75%;
-            height: 75%;
+        .skin-cell img {
+            width: 80%;
+            height: 80%;
             object-fit: contain;
         }
-
-        .skin-locked img {
-            filter: brightness(25%) grayscale(100%);
-            opacity: 0.6;
-        }
-
-        .skin-locked { cursor: not-allowed; }
-        .skin-locked:active { transform: none; }
-
-        .skin-count {
-            position: absolute;
-            bottom: 3px;
-            right: 4px;
-            background-color: #ff5277;
-            color: #ffffff;
-            font-size: 11px;
-            font-weight: bold;
-            padding: 1px 5px;
-            border-radius: 9px;
-            pointer-events: none;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        }
-
-        #color-picker-input { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <img src="icon_clicks.png" alt="Clicks bar">
-        <div id="score">0</div>
+    <div class="game-container">
+        <!-- Шапка с очками -->
+        <div class="header">
+            <span>Банки: <span id="score">0</span></span>
+            <span>Клик/сек: <span id="cps">0</span></span>
+        </div>
+
+        <!-- Центральная интерактивная зона -->
+        <div class="click-area" id="click-target">
+            <div class="can-wrapper">
+                <!-- Базовое изображение банки -->
+                <img src="can.png" alt="Can" class="can-img" id="main-can">
+                <!-- Состояния анимации/клика -->
+                <img src="state1.png" alt="State 1" class="state-img" id="state1">
+                <img src="state2.png" alt="State 2" class="state-img" id="state2">
+                
+                <!-- Иконки эмоций у нижнего края банки -->
+                <div class="emotions-bar">
+                    <img src="emotion1.png" alt="Emotion" class="emotion-icon">
+                    <img src="emotion2.png" alt="Emotion" class="emotion-icon">
+                </div>
+            </div>
+        </div>
+
+        <!-- Нижнее меню -->
+        <div class="footer-menu">
+            <button class="menu-btn" id="open-lib">Библиотека</button>
+        </div>
     </div>
 
-    <div class="game-area" id="click-zone">
-        <img id="jar-skin" class="layer" src="skin_default_fish.png" alt="Jar Skin">
-        <img id="jar-face" class="layer" src="emotion_default_surprise.png" alt="Face Skin">
-        <img id="jar-legs" class="layer" src="state1_legs.png" alt="Legs">
-        <img id="chest" src="icon_chest.png" alt="Chest">
-    </div>
-
-    <!-- Обновленное меню с контейнерами для бейджиков -->
-    <div class="bottom-nav">
-        <div class="nav-item">
-            <img src="icon_color_background_round.png" class="nav-icon" id="btn-color" alt="Color">
-        </div>
-        <div class="nav-item">
-            <img src="icon_clothes.png" class="nav-icon" id="btn-jar-skins" alt="Jar Skins">
-            <div id="badge-jar" class="nav-badge">!</div>
-        </div>
-        <div class="nav-item">
-            <img src="icon_emotions.png" class="nav-icon" id="btn-faces" alt="Emotions">
-            <div id="badge-face" class="nav-badge">!</div>
-        </div>
-        <div class="nav-item">
-            <img src="icon_home.png" class="nav-icon" id="btn-home" alt="Home">
-        </div>
-    </div>
-
-    <div id="skin-modal" class="modal">
+    <!-- Окно библиотеки -->
+    <div class="modal" id="lib-modal">
         <div class="modal-content">
-            <img src="icon_button_close.png" class="close-btn" id="btn-close-modal" alt="Close">
-            <div id="skins-grid" class="skins-grid"></div>
+            <div class="modal-header">
+                <h3>Коллекция</h3>
+                <button class="close-btn" id="close-lib">×</button>
+            </div>
+            <!-- Динамическая сетка: нет пустых ячеек, ячейки добавляются по мере открытия скинов -->
+            <div class="skins-grid" id="skins-grid">
+                <!-- Сюда динамически добавляются ячейки -->
+            </div>
         </div>
     </div>
-
-    <input type="color" id="color-picker-input" value="#c3b1f3">
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+        // Актуальная ссылка на проект: https://foxylove3d.github.io/banka_v_popi/
+        let score = 0;
+        const scoreElement = document.getElementById('score');
+        const clickTarget = document.getElementById('click-target');
+        const state1 = document.getElementById('state1');
+        const state2 = document.getElementById('state2');
+        
+        const openLibBtn = document.getElementById('open-lib');
+        const closeLibBtn = document.getElementById('close-lib');
+        const libModal = document.getElementById('lib-modal');
+        const skinsGrid = document.getElementById('skins-grid');
 
-        const jarSkins = [
-            'skin_default_borsh.png', 'skin_default_cucumber.png', 'skin_default_fish.png',
-            'skin_default_pony.png', 'skin_rare_crotovua.png', 'банка.png'
-        ];
+        // Список разблокированных скинов (изначально только дефолтные элементы)
+        let unlockedSkins = ['can.png', 'state1.png', 'state2.png']; 
 
-        const faceSkins = [
-            'emotion_default_angry.png', 'emotion_default_angry_cat.png', 'emotion_default_cry.png',
-            'emotion_default_cute.png', 'emotion_default_dog.png', 'emotion_default_pived.png',
-            'emotion_default_sad.png', 'emotion_default_sad_cat.png', 'emotion_default_sleep.png',
-            'emotion_default_soldful.png', 'emotion_default_surprise.png', 'emotion_default_surprise_happy.png',
-            'emotion_default_trall.png', 'emotion_rare_dog_happy.png', 'emotion_rare_pikmi.png',
-            'emotion_rare_question.png'
-        ];
-
-        const rarePool = [...jarSkins, ...faceSkins].filter(s => s.includes('rare'));
-        const defaultPool = [...jarSkins, ...faceSkins].filter(s => !s.includes('rare'));
-
-        let clicks = parseInt(localStorage.getItem('savedClicks')) || 0;
-        let bgColor = localStorage.getItem('savedBgColor') || 'rgb(195, 177, 243)';
-        let inventory = JSON.parse(localStorage.getItem('playerInventory')) || {};
-        let lastChestTime = parseInt(localStorage.getItem('lastChestTime')) || 0;
-        let chestTaps = 0;
-
-        // Переменные для уведомлений (!)
-        let hasNewJar = localStorage.getItem('hasNewJar') === 'true';
-        let hasNewFace = localStorage.getItem('hasNewFace') === 'true';
-
-        // Выдача начальных скинов при первом входе
-        if (Object.keys(inventory).length === 0) {
-            inventory['skin_default_fish.png'] = 1; 
-            inventory['emotion_default_surprise.png'] = 1; 
-            localStorage.setItem('playerInventory', JSON.stringify(inventory));
-            localStorage.setItem('selectedJarSkin', 'skin_default_fish.png');
-            localStorage.setItem('selectedFaceSkin', 'emotion_default_surprise.png');
+        // Отрисовка библиотеки без пустых ячеек
+        function renderLibrary() {
+            skinsGrid.innerHTML = '';
+            unlockedSkins.forEach(skin => {
+                const cell = document.createElement('div');
+                cell.className = 'skin-cell';
+                const img = document.createElement('img');
+                img.src = skin;
+                cell.appendChild(img);
+                skinsGrid.appendChild(cell);
+            });
         }
 
-        const scoreEl = document.getElementById('score');
-        const legsEl = document.getElementById('jar-legs');
-        const jarEl = document.getElementById('jar-skin');
-        const faceEl = document.getElementById('jar-face');
-        const chestEl = document.getElementById('chest');
-        const colorPicker = document.getElementById('color-picker-input');
-        const badgeJar = document.getElementById('badge-jar');
-        const badgeFace = document.getElementById('badge-face');
+        // Клик по банке
+        clickTarget.addEventListener('click', () => {
+            score += 1;
+            scoreElement.textContent = score;
 
-        scoreEl.innerText = clicks;
-        document.body.style.backgroundColor = bgColor;
-
-        const savedJar = localStorage.getItem('selectedJarSkin');
-        const savedFace = localStorage.getItem('selectedFaceSkin');
-        if (savedJar) jarEl.src = savedJar;
-        if (savedFace) faceEl.src = savedFace;
-
-        // Обновление отображения бейджиков
-        function updateBadges() {
-            badgeJar.style.display = hasNewJar ? 'block' : 'none';
-            badgeFace.style.display = hasNewFace ? 'block' : 'none';
-        }
-        updateBadges();
-
-        const clickZone = document.getElementById('click-zone');
-
-        function tapDown(e) {
-            if (e.target.id === 'chest') return;
-            e.preventDefault();
-
-            clicks++;
-            scoreEl.innerText = clicks;
-            localStorage.setItem('savedClicks', clicks);
-            legsEl.src = 'state2_legs.png';
-
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        }
-
-        function tapUp(e) {
-            if (e.target.id === 'chest') return;
-            e.preventDefault();
-            legsEl.src = 'state1_legs.png';
-        }
-
-        clickZone.addEventListener('mousedown', tapDown);
-        clickZone.addEventListener('mouseup', tapUp);
-        clickZone.addEventListener('touchstart', tapDown);
-        clickZone.addEventListener('touchend', tapUp);
-
-        function checkChest() {
-            const now = Date.now();
-            if (now - lastChestTime >= 30 * 60 * 1000) {
-                chestEl.style.display = 'block';
-            } else {
-                chestEl.style.display = 'none';
-            }
-        }
-
-        chestEl.addEventListener('click', (e) => {
-            e.stopPropagation();
-            chestTaps++;
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-
-            if (chestTaps >= 1000) openChest();
+            // Смена стейтов при клике
+            state1.classList.add('active');
+            setTimeout(() => {
+                state1.classList.remove('active');
+                state2.classList.add('active');
+                setTimeout(() => {
+                    state2.classList.remove('active');
+                }, 100);
+            }, 100);
         });
 
-        function openChest() {
-            const isRare = Math.random() < 0.05;
-            const pool = isRare ? rarePool : defaultPool;
-            const droppedSkin = pool[Math.floor(Math.random() * pool.length)];
+        // Открытие/закрытие модального окна
+        openLibBtn.addEventListener('click', () => {
+            renderLibrary();
+            libModal.classList.add('open');
+        });
 
-            inventory[droppedSkin] = (inventory[droppedSkin] || 0) + 1;
-            localStorage.setItem('playerInventory', JSON.stringify(inventory));
-
-            // Зажигаем уведомление в зависимости от типа скина
-            if (jarSkins.includes(droppedSkin)) {
-                hasNewJar = true;
-                localStorage.setItem('hasNewJar', 'true');
-            } else {
-                hasNewFace = true;
-                localStorage.setItem('hasNewFace', 'true');
-            }
-            updateBadges();
-
-            alert((isRare ? "🌟 РЕДКИЙ СКИН!\nВам выпал: " : "🎉 Выпал скин:\n") + droppedSkin);
-
-            chestEl.style.display = 'none';
-            chestTaps = 0;
-            lastChestTime = Date.now();
-            localStorage.setItem('lastChestTime', lastChestTime);
-        }
-
-        setInterval(checkChest, 2000);
-        checkChest();
-
-        function renderGrid(skinList, type) {
-            const gridContainer = document.getElementById('skins-grid');
-            gridContainer.innerHTML = '';
-            const totalSlots = Math.max(16, skinList.length);
-
-            for (let i = 0; i < totalSlots; i++) {
-                const slot = document.createElement('div');
-                slot.className = 'skin-slot';
-
-                if (skinList[i]) {
-                    const skinName = skinList[i];
-                    const count = inventory[skinName] || 0;
-                    const img = document.createElement('img');
-                    img.src = skinName;
-                    slot.appendChild(img);
-
-                    if (count > 0) {
-                        if (count > 1) {
-                            const badge = document.createElement('div');
-                            badge.className = 'skin-count';
-                            badge.innerText = count;
-                            slot.appendChild(badge);
-                        }
-                        slot.onclick = () => {
-                            if (type === 'jar') {
-                                jarEl.src = skinName;
-                                localStorage.setItem('selectedJarSkin', skinName);
-                            } else if (type === 'face') {
-                                faceEl.src = skinName;
-                                localStorage.setItem('selectedFaceSkin', skinName);
-                            }
-                            closeModal('skin-modal');
-                        };
-                    } else {
-                        slot.classList.add('skin-locked');
-                        slot.onclick = () => alert("Этот скин ещё не открыт! Выбейте его из сундука.");
-                    }
-                }
-                gridContainer.appendChild(slot);
-            }
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-
-        document.getElementById('btn-close-modal').onclick = () => closeModal('skin-modal');
-        document.getElementById('btn-home').onclick = () => closeModal('skin-modal');
-
-        document.getElementById('btn-jar-skins').onclick = () => {
-            hasNewJar = false;
-            localStorage.setItem('hasNewJar', 'false');
-            updateBadges();
-            renderGrid(jarSkins, 'jar');
-            document.getElementById('skin-modal').style.display = 'flex';
-        };
-
-        document.getElementById('btn-faces').onclick = () => {
-            hasNewFace = false;
-            localStorage.setItem('hasNewFace', 'false');
-            updateBadges();
-            renderGrid(faceSkins, 'face');
-            document.getElementById('skin-modal').style.display = 'flex';
-        };
-
-        const btnColor = document.getElementById('btn-color');
-        btnColor.onclick = () => colorPicker.click();
-        colorPicker.oninput = (e) => {
-            const selectedColor = e.target.value;
-            document.body.style.backgroundColor = selectedColor;
-            localStorage.setItem('savedBgColor', selectedColor);
-        };
+        closeLibBtn.addEventListener('click', () => {
+            libModal.classList.remove('open');
+        });
     </script>
 </body>
 </html>
