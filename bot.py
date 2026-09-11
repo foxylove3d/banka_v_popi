@@ -5,8 +5,8 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
-BOT_TOKEN = "8654383124:AAHyu6EgqsMBtg--yteILcD2r2HCQTLrVcY"
-WEB_APP_URL = "https://foxylove3d.github.io/anya/?v=2"
+BOT_TOKEN = "8891218010:AAEsjcIe3fRb1tlX6EHHkipDV5U6UdZavMI"
+WEB_APP_URL = "https://foxylove3d.github.io/banka_v_popi/"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -15,15 +15,15 @@ dp = Dispatcher()
 async def cmd_start(message: types.Message):
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
-            text="🎁 Открыть поздравление", 
+            text="🎮 Играть в кликер", 
             web_app=WebAppInfo(url=WEB_APP_URL)
         )]
     ])
-    await message.answer("Жми на кнопку ниже, чтобы запустить праздничный кликер!", reply_markup=kb)
+    await message.answer("Жми на кнопку ниже, чтобы запустить кликер!", reply_markup=kb)
 
-# Веб-сервер для порта Render
+# Простой веб-сервер для фиктивного порта Render
 async def handle(request):
-    return web.Response(text="Anya Bot is running!")
+    return web.Response(text="Bot is running!")
 
 async def start_web_server():
     app = web.Application()
@@ -36,7 +36,7 @@ async def start_web_server():
 
 async def main():
     await start_web_server()
-    print("Веб-сервер запущен, бот Ани готов к работе!")
+    print("Веб-сервер запущен, бот готов к работе!")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
