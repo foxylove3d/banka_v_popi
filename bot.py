@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
-BOT_TOKEN = "8891218010:AAEsjcIe3fRb1tlX6EHHkipDV5U6UdZavMI"
+BOT_TOKEN = "8891218010:AAEGuU9-6zT6fAWSKvJBHsWPzVDEQOSA2IE"
 WEB_APP_URL = "https://foxylove3d.github.io/banka_v_popi/"
 
 bot = Bot(token=BOT_TOKEN)
