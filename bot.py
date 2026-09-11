@@ -2,15 +2,15 @@ import os
 import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, FSInputFile
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, URLInputFile
 from aiohttp import web
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
-# Обновленный токен твоего бота
+# Токен твоего бота
 BOT_TOKEN = "8891218010:AAEGuU9-6zT6fAWSKvJBHsWPzVDEQOSA2IE"
 
-# Ссылка на твой GitHub Pages с игрой
-WEB_APP_URL = "https://foxylove3d.github.io/banka_v_popi/"
+# Ссылка на саму игру (если index.html лежит в новом репозитории, обнови ее тоже, если нужно)
+WEB_APP_URL = "https://foxylove3d.github.io/banka_v_popi_img/"
 
 # Ссылка на твой веб-сервис на Render
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "https://banka-v-popi.onrender.com")
@@ -34,8 +34,9 @@ async def cmd_start(message: types.Message):
         )]
     ])
     
-    # Загружаем приветственную картинку
-    photo = FSInputFile("privetstvie.jpg")
+    # Загружаем приветственную картинку по прямой ссылке из публичного репозитория
+    photo_url = "https://raw.githubusercontent.com/foxylove3d/banka_v_popi_img/main/privetstvie.jpg"
+    photo = URLInputFile(photo_url)
     
     # Отправляем фото и кнопку
     await message.answer_photo(
