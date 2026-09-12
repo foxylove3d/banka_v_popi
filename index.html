@@ -43,7 +43,7 @@
             justify-content: space-between;
         }
 
-        /* Верхняя панель со счетчиком */
+        /* Верхняя панель */
         .top-bar {
             position: relative;
             width: 100%;
@@ -92,7 +92,7 @@
             100% { transform: translateY(-6px); }
         }
 
-        /* Центральная зона с персонажем */
+        /* Центральная зона */
         .click-area {
             position: relative;
             flex-grow: 1;
@@ -102,56 +102,65 @@
             width: 100%;
         }
 
-        /* Контейнер-основа, задающий размер персонажа */
-        .can-wrapper {
+        /* КОНТЕЙНЕР ПЕРСОНАЖА (Базируется на Стейт 1) */
+        .character-wrapper {
             position: relative;
-            width: 220px;
-            height: 220px;
+            width: 320px; /* Базовая ширина для стейта 1 (можно менять, если нужен персонаж крупнее/мельче) */
+            height: 320px; 
             cursor: pointer;
         }
 
-        .can-wrapper:active {
+        .character-wrapper:active {
             transform: scale(0.95);
             transition: transform 0.05s ease;
         }
 
-        /* Банка занимает 100% контейнера */
-        .can-img {
+        /* ОБЩИЕ ПРАВИЛА: Центрирование по горизонтали */
+        .character-part {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            left: 50%;
+            transform: translateX(-50%);
             object-fit: contain;
+            pointer-events: none;
+        }
+
+        /* 1. Стейт 1 - 100% ширины, стоит на полу */
+        #state1 {
+            width: 100%;
+            height: auto;
+            bottom: 0;
+            z-index: 5;
+        }
+
+        /* 2. Стейт 2 - Размер как у Стейт 1 (100%), выровнен по нижнему краю */
+        #state2 {
+            width: 100%;
+            height: auto;
+            bottom: 0;
+            z-index: 5;
+            display: none;
+        }
+        #state2.active {
+            display: block;
+        }
+        #state1.hidden {
+            display: none;
+        }
+
+        /* 3. Банка - 45% от Стейт 1, по центру и по нижнему краю */
+        #main-can {
+            width: 45%;
+            height: auto;
+            bottom: 0; 
             z-index: 2;
         }
 
-        /* Лицо меньше банки (55%) и отцентрировано */
-        .face-img {
-            position: absolute;
-            top: 25%; /* Опускаем ниже крышки */
-            left: 22.5%; /* Центрируем по горизонтали */
-            width: 55%;
+        /* 4. Лицо - 30% от банки (это 13.5% от контейнера), выровнено по нижнему краю */
+        #main-face {
+            width: 13.5%;
             height: auto;
+            bottom: 0; 
             z-index: 3;
-            pointer-events: none;
-        }
-
-        /* Ноги шире банки (140%) и выходят за её края */
-        .state-img {
-            position: absolute;
-            top: -15%;
-            left: -20%;
-            width: 140%;
-            height: 140%;
-            object-fit: contain;
-            display: none;
-            z-index: 5; /* Поверх банки и лица */
-            pointer-events: none;
-        }
-
-        .state-img.active {
-            display: block;
         }
 
         /* Нижнее меню */
@@ -273,13 +282,13 @@
             <img src="icon_chest.png" alt="Chest" class="chest-icon" id="chest">
         </div>
 
-        <!-- Центральная зона: теперь все слои собраны в одном блоке-контейнере -->
-        <div class="click-area" id="click-target">
-            <div class="can-wrapper">
-                <img src="банка.png" alt="Can" class="can-img" id="main-can">
-                <img src="emotion_default_trall.png" alt="Face" class="face-img" id="main-face">
-                <img src="state1_legs.png" alt="State 1" class="state-img" id="state1">
-                <img src="state2_legs.png" alt="State 2" class="state-img" id="state2">
+        <div class="click-area">
+            <!-- Контейнер персонажа -->
+            <div class="character-wrapper" id="click-target">
+                <img src="банка.png" alt="Can" class="character-part" id="main-can">
+                <img src="emotion_default_trall.png" alt="Face" class="character-part" id="main-face">
+                <img src="state1_legs.png" alt="State 1" class="character-part" id="state1">
+                <img src="state2_legs.png" alt="State 2" class="character-part" id="state2">
             </div>
         </div>
 
@@ -380,13 +389,12 @@
             score += 1;
             scoreElement.textContent = score;
 
-            state1.classList.add('active');
+            state1.classList.add('hidden');
+            state2.classList.add('active');
+            
             setTimeout(() => {
-                state1.classList.remove('active');
-                state2.classList.add('active');
-                setTimeout(() => {
-                    state2.classList.remove('active');
-                }, 100);
+                state1.classList.remove('hidden');
+                state2.classList.remove('active');
             }, 100);
         });
 
