@@ -177,6 +177,27 @@
             z-index: 30;
         }
 
+        /* Обертка для кнопки цвета */
+        .color-wrapper {
+            position: relative;
+            width: 55px;
+            height: 55px;
+        }
+
+        /* Растягиваем инпут ровно по размеру кнопки цвета и делаем невидимым, но кликабельным */
+        #color-picker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            border: none;
+            padding: 0;
+            z-index: 5;
+        }
+
         .menu-btn {
             background: transparent;
             border: none;
@@ -346,11 +367,14 @@
         </div>
 
         <div class="footer-menu">
-            <input type="color" id="color-picker" style="display: none;">
-            
-            <button class="menu-btn" id="color-btn" title="Выбрать цвет фона">
-                <img src="icon_color_background.png" alt="Color">
-            </button>
+            <!-- Кнопка выбора цвета вместе со скрытым поверх нее инпутом -->
+            <div class="color-wrapper">
+                <button class="menu-btn" id="color-btn" title="Выбрать цвет фона" style="width: 100%; height: 100%;">
+                    <img src="icon_color_background.png" alt="Color">
+                </button>
+                <input type="color" id="color-picker">
+            </div>
+
             <button class="menu-btn" id="open-lib" title="Коллекция скинов">
                 <img src="icon_clothes.png" alt="Library">
             </button>
@@ -461,10 +485,6 @@
         }
 
         // Логика выбора цвета фона через системную палитру/пипетку
-        colorBtn.addEventListener('click', () => {
-            colorPicker.click();
-        });
-
         colorPicker.addEventListener('input', (e) => {
             const chosenColor = e.target.value;
             document.body.style.backgroundColor = chosenColor;
