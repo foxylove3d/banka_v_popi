@@ -227,7 +227,7 @@
 
         .modal-header {
             display: flex;
-            justify-content: flex-end; /* Кнопка закрытия теперь справа, а текста нет */
+            justify-content: flex-end;
             align-items: center;
             margin-bottom: 15px;
         }
@@ -331,7 +331,7 @@
     <div class="game-container">
         
         <div class="top-bar">
-            <div class="score-box" id="score">70</div>
+            <div class="score-box" id="score">0</div>
             <img src="icon_chest.png" alt="Chest" class="chest-icon" id="chest">
         </div>
 
@@ -363,7 +363,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно библиотеки (без надписи) -->
+    <!-- Модальное окно библиотеки -->
     <div class="modal" id="lib-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -385,8 +385,12 @@
     </div>
 
     <script>
-        let score = 70;
+        // Загрузка сохраненного счета (если его нет, ставим 0)
+        let score = parseInt(localStorage.getItem('game_score')) || 0;
+        
         const scoreElement = document.getElementById('score');
+        scoreElement.textContent = score; // Сразу выводим актуальное значение на экран
+
         const clickTarget = document.getElementById('click-target');
         const state1 = document.getElementById('state1');
         const state2 = document.getElementById('state2');
@@ -573,6 +577,9 @@
             e.preventDefault();
             score += 1;
             scoreElement.textContent = score;
+            
+            // Сохраняем счетчик в localStorage при каждом клике
+            localStorage.setItem('game_score', score);
 
             state1.classList.add('hidden');
             state2.classList.add('active');
