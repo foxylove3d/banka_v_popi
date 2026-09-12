@@ -10,7 +10,7 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 BOT_TOKEN = "8891218010:AAEGuU9-6zT6fAWSKvJBHsWPzVDEQOSA2IE"
 
 # Ссылка на саму игру (если index.html лежит в новом репозитории, обнови ее тоже, если нужно)
-WEB_APP_URL = "https://foxylove3d.github.io/banka_v_popi_img/"
+WEB_APP_URL = "https://foxylove3d.github.io/banka_v_popi/"
 
 # Ссылка на твой веб-сервис на Render
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "https://banka-v-popi.onrender.com")
