@@ -35,7 +35,7 @@ async def cmd_start(message: types.Message):
     ])
     
     # Загружаем приветственную картинку по прямой ссылке из публичного репозитория
-    photo_url = "https://raw.githubusercontent.com/foxylove3d/banka_v_popi_img/main/privetstvie.jpg"
+    photo_url = "https://raw.githubusercontent.com/foxylove3d/banka_v_popi/main/privetstvie.jpg"
     photo = URLInputFile(photo_url)
     
     # Отправляем фото и кнопку
