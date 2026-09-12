@@ -102,10 +102,10 @@
             width: 100%;
         }
 
-        /* КОНТЕЙНЕР ПЕРСОНАЖА (Базируется на Стейт 1) */
+        /* КОНТЕЙНЕР ПЕРСОНАЖА */
         .character-wrapper {
             position: relative;
-            width: 320px; /* Базовая ширина для стейта 1 (можно менять, если нужен персонаж крупнее/мельче) */
+            width: 320px; 
             height: 320px; 
             cursor: pointer;
         }
@@ -122,6 +122,15 @@
             transform: translateX(-50%);
             object-fit: contain;
             pointer-events: none;
+        }
+
+        /* 0. Тень - 100% ширины, середина находится на нижней границе стейта 1 */
+        #main-shadow {
+            width: 100%;
+            height: auto;
+            bottom: 0;
+            transform: translate(-50%, 50%);
+            z-index: 1;
         }
 
         /* 1. Стейт 1 - 100% ширины, стоит на полу */
@@ -147,7 +156,7 @@
             display: none;
         }
 
-        /* 3. Банка - 45% от Стейт 1, по центру и по нижнему краю */
+        /* 3. Банка */
         #main-can {
             width: 40%;
             height: auto;
@@ -155,7 +164,7 @@
             z-index: 2;
         }
 
-        /* 4. Лицо - 30% от банки (это 13.5% от контейнера), выровнено по нижнему краю */
+        /* 4. Лицо */
         #main-face {
             width: 25.5%;
             height: auto;
@@ -285,6 +294,7 @@
         <div class="click-area">
             <!-- Контейнер персонажа -->
             <div class="character-wrapper" id="click-target">
+                <img src="shadow.png" alt="Shadow" class="character-part" id="main-shadow">
                 <img src="банка.png" alt="Can" class="character-part" id="main-can">
                 <img src="emotion_default_trall.png" alt="Face" class="character-part" id="main-face">
                 <img src="state1_legs.png" alt="State 1" class="character-part" id="state1">
