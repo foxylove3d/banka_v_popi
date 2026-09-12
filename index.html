@@ -124,7 +124,7 @@
             pointer-events: none;
         }
 
-        /* 0. Тень - 100% ширины, середина находится на нижней границе стейта 1 */
+        /* 0. Тень */
         #main-shadow {
             width: 100%;
             height: auto;
@@ -133,7 +133,7 @@
             z-index: 1;
         }
 
-        /* 1. Стейт 1 - 100% ширины, стоит на полу */
+        /* 1. Стейт 1 */
         #state1 {
             width: 100%;
             height: auto;
@@ -141,7 +141,7 @@
             z-index: 5;
         }
 
-        /* 2. Стейт 2 - Размер как у Стейт 1 (100%), выровнен по нижнему краю */
+        /* 2. Стейт 2 */
         #state2 {
             width: 100%;
             height: auto;
@@ -197,7 +197,7 @@
             object-fit: contain;
         }
 
-        /* Модальное окно библиотеки */
+        /* Модальные окна (Библиотеки и Палитра) */
         .modal {
             position: fixed;
             top: 0;
@@ -217,12 +217,14 @@
         }
 
         .modal-content {
-            background: #2a2a2a;
+            background-image: url('background_icons.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
             width: 100%;
-            max-width: 400px;
-            max-height: 80vh;
+            max-width: 360px;
             border-radius: 20px;
-            padding: 20px;
+            padding: 25px 20px 20px 20px;
             display: flex;
             flex-direction: column;
             position: relative;
@@ -233,6 +235,12 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 22px;
         }
 
         .close-btn {
@@ -253,12 +261,13 @@
             object-fit: contain;
         }
 
+        /* Сетка библиотеки: ровно 3 колонки, скролл при переполнении */
         .skins-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            gap: 12px;
             overflow-y: auto;
-            max-height: calc(4 * 90px + 3 * 10px);
+            max-height: calc(4 * 90px + 3 * 12px);
             padding-right: 5px;
         }
 
@@ -273,12 +282,46 @@
             justify-content: center;
             overflow: hidden;
             cursor: pointer;
+            position: relative;
         }
 
         .skin-cell img {
             width: 70%;
             height: 70%;
             object-fit: contain;
+        }
+
+        /* Счётчик дубликатов в левом углу ячейки */
+        .item-count {
+            position: absolute;
+            top: 4px;
+            left: 6px;
+            background: #ffcc00;
+            color: #1a1a1a;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 1px 5px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Сетка палитры цветов */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .color-cell {
+            aspect-ratio: 1 / 1;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.1s ease;
+        }
+
+        .color-cell:active {
+            transform: scale(0.92);
         }
     </style>
 </head>
@@ -306,10 +349,10 @@
             <button class="menu-btn" id="color-btn" title="Цвет фона">
                 <img src="icon_color_background.png" alt="Color">
             </button>
-            <button class="menu-btn" id="open-lib" title="Библиотека">
+            <button class="menu-btn" id="open-lib" title="Коллекция скинов">
                 <img src="icon_clothes.png" alt="Library">
             </button>
-            <button class="menu-btn" title="Стиль">
+            <button class="menu-btn" id="open-emotions" title="Коллекция эмоций">
                 <img src="icon_emotions.png" alt="Style">
             </button>
             <button class="menu-btn" title="Главная">
@@ -318,16 +361,31 @@
         </div>
     </div>
 
-    <!-- Окно библиотеки -->
+    <!-- Общее модальное окно (используется для Скинов и Эмоций) -->
     <div class="modal" id="lib-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Коллекция</h3>
+                <h3 id="modal-title">Коллекция</h3>
                 <button class="close-btn" id="close-lib">
                     <img src="icon_button_close.png" alt="Close">
                 </button>
             </div>
             <div class="skins-grid" id="skins-grid"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно палитры цветов фона -->
+    <div class="modal" id="color-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Цвет фона</h3>
+                <button class="close-btn" id="close-color">
+                    <img src="icon_button_close.png" alt="Close">
+                </button>
+            </div>
+            <div class="color-grid" id="color-grid">
+                <!-- Цвета заполняются скриптом -->
+            </div>
         </div>
     </div>
 
@@ -338,21 +396,143 @@
         const state1 = document.getElementById('state1');
         const state2 = document.getElementById('state2');
         const mainCan = document.getElementById('main-can');
+        const mainFace = document.getElementById('main-face');
         
-        const openLibBtn = document.getElementById('open-lib');
-        const closeLibBtn = document.getElementById('close-lib');
+        // Модалки
         const libModal = document.getElementById('lib-modal');
+        const modalTitle = document.getElementById('modal-title');
         const skinsGrid = document.getElementById('skins-grid');
+        const openLibBtn = document.getElementById('open-lib');
+        const openEmotionsBtn = document.getElementById('open-emotions');
+        const closeLibBtn = document.getElementById('close-lib');
+
+        const colorModal = document.getElementById('color-modal');
+        const colorBtn = document.getElementById('color-btn');
+        const closeColorBtn = document.getElementById('close-color');
+        const colorGrid = document.getElementById('color-grid');
+
         const chest = document.getElementById('chest');
 
-        let unlockedSkins = [
-            'skin_default_borsh.png', 
-            'skin_default_cucumber.png', 
-            'skin_default_fish.png', 
-            'skin_default_pony.png', 
-            'skin_rare_crotovuha.png'
-        ]; 
+        // Данные по скинам и эмоциям (база доступных предметов в игре)
+        // Шансы: Дефолтные ~80% суммарно, редкие ~20% суммарно
+        const ALL_SKINS = [
+            { id: 'skin_default_borsh.png', rarity: 'default', chance: 20 },
+            { id: 'skin_default_cucumber.png', rarity: 'default', chance: 20 },
+            { id: 'skin_default_fish.png', rarity: 'default', chance: 20 },
+            { id: 'skin_default_pony.png', rarity: 'default', chance: 20 },
+            { id: 'skin_rare_crotovuha.png', rarity: 'rare', chance: 20 }
+        ];
 
+        const ALL_EMOTIONS = [
+            { id: 'emotion_default_trall.png', rarity: 'default', chance: 50 },
+            { id: 'emotion_rare_fire.png', rarity: 'rare', chance: 50 } // замени имя файла на свое редкое лицо при необходимости
+        ];
+
+        // Инвентарь игрока (хранит количество каждого предмета: { 'skin_name.png': count })
+        let inventorySkins = JSON.parse(localStorage.getItem('inv_skins')) || { 'skin_default_borsh.png': 1 };
+        let inventoryEmotions = JSON.parse(localStorage.getItem('inv_emotions')) || { 'emotion_default_trall.png': 1 };
+
+        let activeTab = 'skins'; // 'skins' или 'emotions'
+
+        // Загрузка сохраненного фона
+        const savedBg = localStorage.getItem('game_bg_color');
+        if (savedBg) {
+            document.body.style.backgroundColor = savedBg;
+        }
+
+        // Палитра доступных цветов фона
+        const bgColors = ['#7b2cbf', '#1a1a2e', '#e63946', '#2a9d8f', '#f4a261', '#457b9d'];
+
+        function initColorPalette() {
+            colorGrid.innerHTML = '';
+            bgColors.forEach(color => {
+                const cell = document.createElement('div');
+                cell.className = 'color-cell';
+                cell.style.backgroundColor = color;
+                cell.addEventListener('click', () => {
+                    document.body.style.backgroundColor = color;
+                    localStorage.setItem('game_bg_color', color);
+                    colorModal.classList.remove('open');
+                });
+                colorGrid.appendChild(cell);
+            });
+        }
+        initColorPalette();
+
+        // Логика выпадения случайного предмета с учетом шансов и дубликатов
+        function dropItem(type) {
+            const pool = type === 'skins' ? ALL_SKINS : ALL_EMOTIONS;
+            const inv = type === 'skins' ? inventorySkins : inventoryEmotions;
+
+            // Рандом по сумме шансов
+            const totalChance = pool.reduce((sum, item) => sum + item.chance, 0);
+            let randomNum = Math.random() * totalChance;
+            
+            let selectedItem = pool[0];
+            for (let item of pool) {
+                if (randomNum < item.chance) {
+                    selectedItem = item;
+                    break;
+                }
+                randomNum -= item.chance;
+            }
+
+            // Добавление в инвентарь (стакаем дубликаты)
+            if (inv[selectedItem.id]) {
+                inv[selectedItem.id]++;
+            } else {
+                inv[selectedItem.id] = 1;
+            }
+
+            // Сохранение
+            if (type === 'skins') {
+                localStorage.setItem('inv_skins', JSON.stringify(inv));
+            } else {
+                localStorage.setItem('inv_emotions', JSON.stringify(inv));
+            }
+        }
+
+        // Отрисовка библиотеки (скинов или эмоций)
+        function renderLibrary(type) {
+            activeTab = type;
+            skinsGrid.innerHTML = '';
+            const inv = type === 'skins' ? inventorySkins : inventoryEmotions;
+            modalTitle.textContent = type === 'skins' ? 'Коллекция скинов' : 'Коллекция эмоций';
+
+            // Показываем только те, которые уже есть у пользователя (количество > 0)
+            Object.keys(inv).forEach(itemId => {
+                if (inv[itemId] > 0) {
+                    const cell = document.createElement('div');
+                    cell.className = 'skin-cell';
+
+                    const img = document.createElement('img');
+                    img.src = itemId;
+                    cell.appendChild(img);
+
+                    // Если дубликатов больше 1, выводим цифру в левом углу
+                    if (inv[itemId] > 1) {
+                        const countBadge = document.createElement('div');
+                        countBadge.className = 'item-count';
+                        countBadge.textContent = inv[itemId];
+                        cell.appendChild(countBadge);
+                    }
+
+                    // Клик по предмету надевает его
+                    cell.addEventListener('click', () => {
+                        if (type === 'skins') {
+                            mainCan.src = itemId;
+                        } else {
+                            mainFace.src = itemId;
+                        }
+                        libModal.classList.remove('open');
+                    });
+
+                    skinsGrid.appendChild(cell);
+                }
+            });
+        }
+
+        // Таймер сундука
         const CHEST_COOLDOWN = 30 * 60 * 1000;
 
         function checkChestTimer() {
@@ -377,27 +557,15 @@
         setInterval(checkChestTimer, 10000);
         checkChestTimer();
 
-        function renderLibrary() {
-            skinsGrid.innerHTML = '';
-            unlockedSkins.forEach(skin => {
-                const cell = document.createElement('div');
-                cell.className = 'skin-cell';
-                const img = document.createElement('img');
-                img.src = skin;
-                cell.appendChild(img);
-
-                cell.addEventListener('click', () => {
-                    mainCan.src = skin;
-                    libModal.classList.remove('open');
-                });
-
-                skinsGrid.appendChild(cell);
-            });
-        }
-
+        // Клик по персонажу (кликер)
         clickTarget.addEventListener('click', () => {
             score += 1;
             scoreElement.textContent = score;
+
+            // Тестовый шанс выпадения скина/эмоции при клике (например, 5% шанс при каждом клике)
+            if (Math.random() < 0.05) {
+                dropItem(Math.random() > 0.5 ? 'skins' : 'emotions');
+            }
 
             state1.classList.add('hidden');
             state2.classList.add('active');
@@ -408,13 +576,27 @@
             }, 100);
         });
 
+        // Управление модальными окнами
         openLibBtn.addEventListener('click', () => {
-            renderLibrary();
+            renderLibrary('skins');
+            libModal.classList.add('open');
+        });
+
+        openEmotionsBtn.addEventListener('click', () => {
+            renderLibrary('emotions');
             libModal.classList.add('open');
         });
 
         closeLibBtn.addEventListener('click', () => {
             libModal.classList.remove('open');
+        });
+
+        colorBtn.addEventListener('click', () => {
+            colorModal.classList.add('open');
+        });
+
+        closeColorBtn.addEventListener('click', () => {
+            colorModal.classList.remove('open');
         });
     </script>
 </body>
