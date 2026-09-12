@@ -110,11 +110,6 @@
             cursor: pointer;
         }
 
-        .character-wrapper:active {
-            transform: scale(0.95);
-            transition: transform 0.05s ease;
-        }
-
         /* ОБЩИЕ ПРАВИЛА: Центрирование по горизонтали */
         .character-part {
             position: absolute;
@@ -156,7 +151,7 @@
             display: none;
         }
 
-        /* 3. Банка */
+        /* 3. Банка (Активный скин) */
         #main-can {
             width: 40%;
             height: auto;
@@ -197,7 +192,7 @@
             object-fit: contain;
         }
 
-        /* Модальные окна (Библиотеки и Палитра) */
+        /* Модальные окна */
         .modal {
             position: fixed;
             top: 0;
@@ -232,15 +227,9 @@
 
         .modal-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end; /* Кнопка закрытия теперь справа, а текста нет */
             align-items: center;
             margin-bottom: 15px;
-        }
-
-        .modal-header h3 {
-            margin: 0;
-            color: #ffffff;
-            font-size: 22px;
         }
 
         .close-btn {
@@ -261,7 +250,7 @@
             object-fit: contain;
         }
 
-        /* Сетка библиотеки: ровно 3 колонки, скролл при переполнении */
+        /* Сетка библиотеки */
         .skins-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -291,7 +280,6 @@
             object-fit: contain;
         }
 
-        /* Счётчик дубликатов в левом углу ячейки */
         .item-count {
             position: absolute;
             top: 4px;
@@ -305,23 +293,36 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        /* Сетка палитры цветов */
-        .color-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+        /* Окно дропа из сундука */
+        .drop-content {
+            align-items: center;
+            text-align: center;
+            padding: 30px 20px;
         }
 
-        .color-cell {
-            aspect-ratio: 1 / 1;
+        .drop-item-img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            margin: 20px 0;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .drop-btn {
+            background: #ffcc00;
+            border: none;
+            padding: 10px 25px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a1a1a;
             border-radius: 12px;
             cursor: pointer;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            transition: transform 0.1s ease;
-        }
-
-        .color-cell:active {
-            transform: scale(0.92);
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -335,10 +336,9 @@
         </div>
 
         <div class="click-area">
-            <!-- Контейнер персонажа -->
             <div class="character-wrapper" id="click-target">
                 <img src="shadow.png" alt="Shadow" class="character-part" id="main-shadow">
-                <img src="банка.png" alt="Can" class="character-part" id="main-can">
+                <img src="skin_default_borsh.png" alt="Can" class="character-part" id="main-can">
                 <img src="emotion_default_trall.png" alt="Face" class="character-part" id="main-face">
                 <img src="state1_legs.png" alt="State 1" class="character-part" id="state1">
                 <img src="state2_legs.png" alt="State 2" class="character-part" id="state2">
@@ -346,7 +346,9 @@
         </div>
 
         <div class="footer-menu">
-            <button class="menu-btn" id="color-btn" title="Цвет фона">
+            <input type="color" id="color-picker" style="display: none;">
+            
+            <button class="menu-btn" id="color-btn" title="Выбрать цвет фона">
                 <img src="icon_color_background.png" alt="Color">
             </button>
             <button class="menu-btn" id="open-lib" title="Коллекция скинов">
@@ -361,11 +363,10 @@
         </div>
     </div>
 
-    <!-- Общее модальное окно (используется для Скинов и Эмоций) -->
+    <!-- Модальное окно библиотеки (без надписи) -->
     <div class="modal" id="lib-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modal-title">Коллекция</h3>
                 <button class="close-btn" id="close-lib">
                     <img src="icon_button_close.png" alt="Close">
                 </button>
@@ -374,18 +375,12 @@
         </div>
     </div>
 
-    <!-- Модальное окно палитры цветов фона -->
-    <div class="modal" id="color-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Цвет фона</h3>
-                <button class="close-btn" id="close-color">
-                    <img src="icon_button_close.png" alt="Close">
-                </button>
-            </div>
-            <div class="color-grid" id="color-grid">
-                <!-- Цвета заполняются скриптом -->
-            </div>
+    <!-- Модальное окно показа выпавшего предмета из сундука -->
+    <div class="modal" id="drop-modal">
+        <div class="modal-content drop-content">
+            <h3>Вам выпало!</h3>
+            <img id="drop-item-image" src="" alt="Drop" class="drop-item-img">
+            <button class="drop-btn" id="close-drop">Забрать</button>
         </div>
     </div>
 
@@ -400,21 +395,23 @@
         
         // Модалки
         const libModal = document.getElementById('lib-modal');
-        const modalTitle = document.getElementById('modal-title');
         const skinsGrid = document.getElementById('skins-grid');
         const openLibBtn = document.getElementById('open-lib');
         const openEmotionsBtn = document.getElementById('open-emotions');
         const closeLibBtn = document.getElementById('close-lib');
 
-        const colorModal = document.getElementById('color-modal');
+        // Модалка дропа
+        const dropModal = document.getElementById('drop-modal');
+        const dropItemImage = document.getElementById('drop-item-image');
+        const closeDropBtn = document.getElementById('close-drop');
+
+        // Палитра (выбор цвета)
         const colorBtn = document.getElementById('color-btn');
-        const closeColorBtn = document.getElementById('close-color');
-        const colorGrid = document.getElementById('color-grid');
+        const colorPicker = document.getElementById('color-picker');
 
         const chest = document.getElementById('chest');
 
-        // Данные по скинам и эмоциям (база доступных предметов в игре)
-        // Шансы: Дефолтные ~80% суммарно, редкие ~20% суммарно
+        // Списки предметов
         const ALL_SKINS = [
             { id: 'skin_default_borsh.png', rarity: 'default', chance: 20 },
             { id: 'skin_default_cucumber.png', rarity: 'default', chance: 20 },
@@ -424,47 +421,55 @@
         ];
 
         const ALL_EMOTIONS = [
-            { id: 'emotion_default_trall.png', rarity: 'default', chance: 50 },
-            { id: 'emotion_rare_fire.png', rarity: 'rare', chance: 50 } // замени имя файла на свое редкое лицо при необходимости
+            { id: 'emotion_default_angry.png', rarity: 'default', chance: 6 },
+            { id: 'emotion_default_angry_cat.png', rarity: 'default', chance: 6 },
+            { id: 'emotion_default_cry.png', rarity: 'default', chance: 6 },
+            { id: 'emotion_default_cute.png', rarity: 'default', chance: 6 },
+            { id: 'emotion_default_dog.png', rarity: 'default', chance: 6 },
+            { id: 'emotion_default_pived.png', rarity: 'default', chance: 6 },
+            { id: 'emotion_default_sad.png', rarity: 'default', chance: 6 },
+            { id: 'emotion_default_sad_cat.png', rarity: 'default', chance: 6 },
+            { id: 'emotion_default_sleep.png', rarity: 'default', chance: 6 },
+            { id: 'emotion_default_soldful.png', rarity: 'default', chance: 6 },
+            { id: 'emotion_default_surprise.png', rarity: 'default', chance: 6 },
+            { id: 'emotion_default_surprise_happy.png', rarity: 'default', chance: 6 },
+            { id: 'emotion_default_trall.png', rarity: 'default', chance: 6 },
+            { id: 'emotion_rare_dog_happy.png', rarity: 'rare', chance: 11 },
+            { id: 'emotion_rare_pikimi.png', rarity: 'rare', chance: 11 },
+            { id: 'emotion_rare_question.png', rarity: 'rare', chance: 12 }
         ];
 
-        // Инвентарь игрока (хранит количество каждого предмета: { 'skin_name.png': count })
+        // Инвентарь
         let inventorySkins = JSON.parse(localStorage.getItem('inv_skins')) || { 'skin_default_borsh.png': 1 };
         let inventoryEmotions = JSON.parse(localStorage.getItem('inv_emotions')) || { 'emotion_default_trall.png': 1 };
 
-        let activeTab = 'skins'; // 'skins' или 'emotions'
+        // Восстановление активного скина и лица
+        const activeSkin = localStorage.getItem('active_skin');
+        const activeEmotion = localStorage.getItem('active_emotion');
+        if (activeSkin) mainCan.src = activeSkin;
+        if (activeEmotion) mainFace.src = activeEmotion;
 
-        // Загрузка сохраненного фона
+        // Восстановление фона
         const savedBg = localStorage.getItem('game_bg_color');
         if (savedBg) {
             document.body.style.backgroundColor = savedBg;
+            colorPicker.value = savedBg;
         }
 
-        // Палитра доступных цветов фона
-        const bgColors = ['#7b2cbf', '#1a1a2e', '#e63946', '#2a9d8f', '#f4a261', '#457b9d'];
+        // Логика выбора цвета фона через системную палитру/пипетку
+        colorBtn.addEventListener('click', () => {
+            colorPicker.click();
+        });
 
-        function initColorPalette() {
-            colorGrid.innerHTML = '';
-            bgColors.forEach(color => {
-                const cell = document.createElement('div');
-                cell.className = 'color-cell';
-                cell.style.backgroundColor = color;
-                cell.addEventListener('click', () => {
-                    document.body.style.backgroundColor = color;
-                    localStorage.setItem('game_bg_color', color);
-                    colorModal.classList.remove('open');
-                });
-                colorGrid.appendChild(cell);
-            });
-        }
-        initColorPalette();
+        colorPicker.addEventListener('input', (e) => {
+            const chosenColor = e.target.value;
+            document.body.style.backgroundColor = chosenColor;
+            localStorage.setItem('game_bg_color', chosenColor);
+        });
 
-        // Логика выпадения случайного предмета с учетом шансов и дубликатов
-        function dropItem(type) {
+        // Функция выпадения предмета
+        function getRandomItem(type) {
             const pool = type === 'skins' ? ALL_SKINS : ALL_EMOTIONS;
-            const inv = type === 'skins' ? inventorySkins : inventoryEmotions;
-
-            // Рандом по сумме шансов
             const totalChance = pool.reduce((sum, item) => sum + item.chance, 0);
             let randomNum = Math.random() * totalChance;
             
@@ -476,30 +481,14 @@
                 }
                 randomNum -= item.chance;
             }
-
-            // Добавление в инвентарь (стакаем дубликаты)
-            if (inv[selectedItem.id]) {
-                inv[selectedItem.id]++;
-            } else {
-                inv[selectedItem.id] = 1;
-            }
-
-            // Сохранение
-            if (type === 'skins') {
-                localStorage.setItem('inv_skins', JSON.stringify(inv));
-            } else {
-                localStorage.setItem('inv_emotions', JSON.stringify(inv));
-            }
+            return selectedItem.id;
         }
 
-        // Отрисовка библиотеки (скинов или эмоций)
+        // Отрисовка библиотеки
         function renderLibrary(type) {
-            activeTab = type;
             skinsGrid.innerHTML = '';
             const inv = type === 'skins' ? inventorySkins : inventoryEmotions;
-            modalTitle.textContent = type === 'skins' ? 'Коллекция скинов' : 'Коллекция эмоций';
 
-            // Показываем только те, которые уже есть у пользователя (количество > 0)
             Object.keys(inv).forEach(itemId => {
                 if (inv[itemId] > 0) {
                     const cell = document.createElement('div');
@@ -509,7 +498,6 @@
                     img.src = itemId;
                     cell.appendChild(img);
 
-                    // Если дубликатов больше 1, выводим цифру в левом углу
                     if (inv[itemId] > 1) {
                         const countBadge = document.createElement('div');
                         countBadge.className = 'item-count';
@@ -517,12 +505,13 @@
                         cell.appendChild(countBadge);
                     }
 
-                    // Клик по предмету надевает его
                     cell.addEventListener('click', () => {
                         if (type === 'skins') {
                             mainCan.src = itemId;
+                            localStorage.setItem('active_skin', itemId);
                         } else {
                             mainFace.src = itemId;
+                            localStorage.setItem('active_emotion', itemId);
                         }
                         libModal.classList.remove('open');
                     });
@@ -534,6 +523,8 @@
 
         // Таймер сундука
         const CHEST_COOLDOWN = 30 * 60 * 1000;
+        let currentDropId = null;
+        let currentDropType = 'skins';
 
         function checkChestTimer() {
             const lastChestTime = localStorage.getItem('last_chest_time');
@@ -548,33 +539,58 @@
 
         chest.addEventListener('click', (e) => {
             e.stopPropagation();
-            score += 50;
-            scoreElement.textContent = score;
-            localStorage.setItem('last_chest_time', Date.now().toString());
+            currentDropType = Math.random() > 0.5 ? 'skins' : 'emotions';
+            currentDropId = getRandomItem(currentDropType);
+
+            dropItemImage.src = currentDropId;
+            dropModal.classList.add('open');
             chest.style.display = 'none';
         });
 
-        setInterval(checkChestTimer, 10000);
+        closeDropBtn.addEventListener('click', () => {
+            const inv = currentDropType === 'skins' ? inventorySkins : inventoryEmotions;
+            if (inv[currentDropId]) {
+                inv[currentDropId]++;
+            } else {
+                inv[currentDropId] = 1;
+            }
+
+            if (currentDropType === 'skins') {
+                localStorage.setItem('inv_skins', JSON.stringify(inv));
+            } else {
+                localStorage.setItem('inv_emotions', JSON.stringify(inv));
+            }
+
+            localStorage.setItem('last_chest_time', Date.now().toString());
+            dropModal.classList.remove('open');
+        });
+
+        setInterval(checkChestTimer, 3000);
         checkChestTimer();
 
-        // Клик по персонажу (кликер)
-        clickTarget.addEventListener('click', () => {
+        // Клик по персонажу
+        function startPress(e) {
+            e.preventDefault();
             score += 1;
             scoreElement.textContent = score;
 
-            // Тестовый шанс выпадения скина/эмоции при клике (например, 5% шанс при каждом клике)
-            if (Math.random() < 0.05) {
-                dropItem(Math.random() > 0.5 ? 'skins' : 'emotions');
-            }
-
             state1.classList.add('hidden');
             state2.classList.add('active');
-            
-            setTimeout(() => {
-                state1.classList.remove('hidden');
-                state2.classList.remove('active');
-            }, 100);
-        });
+        }
+
+        function endPress(e) {
+            e.preventDefault();
+            state1.classList.remove('hidden');
+            state2.classList.remove('active');
+        }
+
+        clickTarget.addEventListener('mousedown', startPress);
+        clickTarget.addEventListener('mouseup', endPress);
+        clickTarget.addEventListener('mouseleave', endPress);
+
+        clickTarget.addEventListener('touchstart', startPress);
+        clickTarget.addEventListener('touchend', endPress);
+        clickTarget.addEventListener('touchcancel', endPress);
 
         // Управление модальными окнами
         openLibBtn.addEventListener('click', () => {
@@ -589,14 +605,6 @@
 
         closeLibBtn.addEventListener('click', () => {
             libModal.classList.remove('open');
-        });
-
-        colorBtn.addEventListener('click', () => {
-            colorModal.classList.add('open');
-        });
-
-        closeColorBtn.addEventListener('click', () => {
-            colorModal.classList.remove('open');
         });
     </script>
 </body>
